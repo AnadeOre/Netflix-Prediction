@@ -11,10 +11,12 @@ DatosPelis = DatosPelis[,-1]
 
 fields <- c("nombre", "peli1", "peli2", "peli3")
 
-
-source('Scripts.R')
+# Cargar archivos con los scripts
+source('ScriptsDatos.R')
+source('AlgoritmoNetflix')
 source('ScriptsVisuales.R')
 
+# Para borrar celdas específicas de la tabla
 submatriz = loadData()
 indexes = reactiveValues()
 indexes$rows = NULL
@@ -28,6 +30,7 @@ borrarIndex = function(indexes) {
 
 shinyApp(
   ui = bootstrapPage(
+    
   sidebarPanel( width = 3,
       textInput(
         inputId = "nombre",
@@ -52,6 +55,7 @@ shinyApp(
         label = "Película 3",
         value = NA,
         width = '70px'),
+      
       div(style="display:flex; justify-content:left",
         div(style='padding:2px', actionButton("submit", "Submit")),
         div(style='padding:2px', actionButton("completar", "Completar")),
@@ -76,6 +80,7 @@ shinyApp(
           div(style='padding:2px', actionButton('elegir', 'Elegir')),
           div(style='padding:2px', actionButton('completarSubMatriz', 'Completar'))
       )),
+  
   mainPanel(
     dataTableOutput("responses", width = 500),
     dataTableOutput('submatriz', width = 500),
@@ -117,6 +122,7 @@ shinyApp(
         # datatable(netflix(DatosPelis))
       }) 
     })
+    
     # Elegir celda para eliminar
     observeEvent(input$elegir, {
       submatriz[input$elegir_row, input$elegir_col] <<- NA
@@ -129,6 +135,7 @@ shinyApp(
          ))
       })
     })
+    # Completar la matriz con celdas eliminadas
     observeEvent(input$completarSubMatriz, {
       output$submatriz = renderDataTable({
         datatable(netflix(submatriz), options = list(
