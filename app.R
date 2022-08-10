@@ -32,8 +32,9 @@ shinyApp(
   ui = bootstrapPage(
     
   sidebarPanel( width = 3,
-      
-    tags$head(tags$style(type="text/css", "
+                
+    tags$head(
+    tags$style(type="text/css", "
     #loadmessage {
      position: fixed;
      top: 0px;
@@ -46,8 +47,30 @@ shinyApp(
      color: #000000;
      background-color: #CCFF66;
      z-index: 105;
-   }
-")),
+    }
+   
+   @import url('https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap');
+
+body {
+  background-color:  white;
+  color: rgb(54, 31, 31); /* text color */
+}
+
+/* Change header text to imported font */
+h2 {
+    font-family: 'Bebas Neue';
+    text-transform: uppercase;
+    font-weight: 900;
+    color: #E50914;
+}
+
+/* Make text visible on inputs */
+.shiny-input-container {
+  color: #564d4d;
+}
+"),
+  ),
+  titlePanel("Netflix"),
     conditionalPanel(condition="$('html').hasClass('shiny-busy')",
                      tags$div("Loading...",id="loadmessage")),         
       textInput(
@@ -101,9 +124,9 @@ shinyApp(
       )),
   
   mainPanel(
-    dataTableOutput("responses", width = 500),
-    dataTableOutput('submatriz', width = 500),
-    dataTableOutput("completo", width = 500), 
+    div(style = 'padding-top: 35px;', dataTableOutput("responses", width = 500)),
+    div(style = 'padding-top: 10;', dataTableOutput('submatriz', width = 500)),
+    div(style = 'padding-top: 10px;', dataTableOutput("completo", width = 500)), 
   )
   ),
   
@@ -125,19 +148,13 @@ shinyApp(
     # Mostrar y actualizar
     output$responses <- renderDataTable({
       input$submit
-      datatable(loadData(),
-        options = list(autoWidth = TRUE,
-          columnDefs = list(list(width = '50px', targets = 1))
-      ))
+      datatable(loadData())
       # datatable(DatosPelis)
     })
     # Botón de completar
     observeEvent(input$completar, {
       output$completo <- renderDataTable({
-        datatable(netflix(loadData()),
-          options = list(autoWidth = TRUE,
-             columnDefs = list(list(width = '50px', targets = 1))
-          ))
+        datatable(netflix(loadData()))
         # datatable(netflix(DatosPelis))
       }) 
     })
@@ -151,9 +168,9 @@ shinyApp(
          datatable(submatriz, options = list(
            dom = "t",
            rowCallback = JS(changeCellColorRed(indexes$rows, indexes$cols)),
-           autoWidth = TRUE,
-           columnDefs = list(list(width = '50px', targets = 1)
-         )))
+           # autoWidth = TRUE,
+           # columnDefs = list(list(width = '50px', targets = 1))
+         ))
       })
     })
     # Completar la matriz con celdas eliminadas
@@ -162,9 +179,7 @@ shinyApp(
         datatable(netflix(submatriz), options = list(
           dom = "t",
           rowCallback = JS(changeCellColorGreen(indexes$rows, indexes$cols)),
-          autoWidth = TRUE,
-          columnDefs = list(list(width = '50px', targets = 1)
-        )))
+          ))
       })
     })
   }
