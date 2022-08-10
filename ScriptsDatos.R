@@ -26,6 +26,5 @@ loadData <- function() {
     dataFull = t(dataFull)
   }
   dataFull
-  dataFull
 }
 
