@@ -13,7 +13,7 @@ fields <- c("nombre", "peli1", "peli2", "peli3")
 
 # Cargar archivos con los scripts
 source('ScriptsDatos.R')
-source('AlgoritmoNetflix')
+source('AlgoritmoNetflix.R')
 source('ScriptsVisuales.R')
 
 # Para borrar celdas específicas de la tabla
@@ -32,6 +32,24 @@ shinyApp(
   ui = bootstrapPage(
     
   sidebarPanel( width = 3,
+      
+    tags$head(tags$style(type="text/css", "
+    #loadmessage {
+     position: fixed;
+     top: 0px;
+     left: 0px;
+     width: 100%;
+     padding: 5px 0px 5px 0px;
+     text-align: center;
+     font-weight: bold;
+     font-size: 100%;
+     color: #000000;
+     background-color: #CCFF66;
+     z-index: 105;
+   }
+")),
+    conditionalPanel(condition="$('html').hasClass('shiny-busy')",
+                     tags$div("Loading...",id="loadmessage")),         
       textInput(
         inputId = "nombre",
         label = 'Nombre',
@@ -59,8 +77,9 @@ shinyApp(
       div(style="display:flex; justify-content:left",
         div(style='padding:2px', actionButton("submit", "Submit")),
         div(style='padding:2px', actionButton("completar", "Completar")),
+        
       ),
-      
+    
       div(style="display:flex; justify-content:left",
         div(style='padding:2px',
         numericInput(
@@ -115,7 +134,7 @@ shinyApp(
     # Botón de completar
     observeEvent(input$completar, {
       output$completo <- renderDataTable({
-        datatable(netflix(DatosPelis),
+        datatable(netflix(loadData()),
           options = list(autoWidth = TRUE,
              columnDefs = list(list(width = '50px', targets = 1))
           ))
@@ -131,8 +150,10 @@ shinyApp(
       output$submatriz = renderDataTable({
          datatable(submatriz, options = list(
            dom = "t",
-           rowCallback = JS(changeCellColorRed(indexes$rows, indexes$cols))
-         ))
+           rowCallback = JS(changeCellColorRed(indexes$rows, indexes$cols)),
+           autoWidth = TRUE,
+           columnDefs = list(list(width = '50px', targets = 1)
+         )))
       })
     })
     # Completar la matriz con celdas eliminadas
@@ -140,8 +161,10 @@ shinyApp(
       output$submatriz = renderDataTable({
         datatable(netflix(submatriz), options = list(
           dom = "t",
-          rowCallback = JS(changeCellColorGreen(indexes$rows, indexes$cols))
-        ))
+          rowCallback = JS(changeCellColorGreen(indexes$rows, indexes$cols)),
+          autoWidth = TRUE,
+          columnDefs = list(list(width = '50px', targets = 1)
+        )))
       })
     })
   }
