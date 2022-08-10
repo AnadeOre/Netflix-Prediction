@@ -1,3 +1,5 @@
+# Funciones para cambiar el color a las celdas
+
 changeCellColorRed <- function(i, j){
   color <- '#ff6a5b'
   c(

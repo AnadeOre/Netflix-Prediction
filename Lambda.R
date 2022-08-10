@@ -1,3 +1,5 @@
+# Usamos cross validation para encontrar el mejor lambda
+
 lambda = function(X) {
   vmin=1
   vmax=10
