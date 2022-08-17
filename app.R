@@ -28,6 +28,30 @@ borrarIndex = function(indexes) {
   indexes$cols = NULL
 }
 
+headerCallback <- c(
+  "function(thead, data, start, end, display){",
+  "  var $ths = $(thead).find('th');",
+  "  $ths.css({'vertical-align': 'bottom', 'white-space': 'nowrap'});",
+  "  var betterCells = [];",
+  "  $ths.each(function(){",
+  "    var cell = $(this);",
+  "    var newDiv = $('<div>', {height: 'auto', width: '8px'});",
+  "    var newInnerDiv = $('<div>', {text: cell.text()});",
+  "    newDiv.css({margin: 'auto'});",
+  "    newInnerDiv.css({",
+  "      transform: 'rotate(180deg)',",
+  "      'writing-mode': 'tb-rl',",
+  "      'white-space': 'nowrap'",
+  "    });",
+  "    newDiv.append(newInnerDiv);",
+  "    betterCells.push(newDiv);",
+  "  });",
+  "  $ths.each(function(i){",
+  "    $(this).html(betterCells[i]);",
+  "  });",
+  "}"
+)
+
 shinyApp(
   ui = bootstrapPage(
     
@@ -64,6 +88,10 @@ h2 {
     color: #E50914;
 }
 
+.td-text-center {
+  width = '10px';
+}
+
 /* Make text visible on inputs */
 .shiny-input-container {
   color: #564d4d;
@@ -73,7 +101,9 @@ h2 {
   titlePanel("Netflix"),
     conditionalPanel(condition="$('html').hasClass('shiny-busy')",
                      tags$div("Loading...",id="loadmessage")),         
-      textInput(
+    h3("Agregar Datos"),
+    helpText("Complete todos los campos para agregar una nueva persona a la base de datos."),  
+    textInput(
         inputId = "nombre",
         label = 'Nombre',
         value = '',
@@ -102,31 +132,56 @@ h2 {
         div(style='padding:2px', actionButton("completar", "Completar")),
         
       ),
-    
+      
+      # CAMBIAR VALOR
+      h3("Cambiar Dato"),
+      helpText("Elija la columna y fila del dato mal ingresado para cambiarlo."),
       div(style="display:flex; justify-content:left",
         div(style='padding:2px',
         numericInput(
-        inputId = 'elegir_row',
+        inputId = 'elegir_row_cambiar',
         label = 'Fila',
         value = NA,
         width = '60px')),
       div(style='padding:2px',
         numericInput(
-        inputId = 'elegir_col',
+        inputId = 'elegir_col_cambiar',
         label = 'Columna',
         value = NA,
-        width = '60px'))
+        width = '60px')),
+      div(style='padding:2px',
+          numericInput(
+            inputId = 'cambiar_num',
+            label = 'Calificación',
+            value = NA,
+            width = '60px')),
+      div(style='margin-top:27px', actionButton('cambiar_valor_boton', 'Cambiar'))
       ),
-      
-      div(style="display:flex; justify-content:left",
-          div(style='padding:2px', actionButton('elegir', 'Elegir')),
-          div(style='padding:2px', actionButton('completarSubMatriz', 'Completar'))
-      )),
+  
+  h3("Pintar celda"),
+  helpText("Elija la columna y fila de la celda que desea pintar."),
+
+    div(style="display:flex; justify-content:left",
+        div(style='padding:2px',
+            numericInput(
+              inputId = 'pintar_row',
+              label = 'Fila',
+              value = NA,
+              width = '60px')),
+        div(style='padding:2px',
+            numericInput(
+              inputId = 'pintar_col',
+              label = 'Columna',
+              value = NA,
+              width = '60px')),
+      div(style='margin-top:27px', actionButton('pintar', 'Pintar')),
+    ),
+),
   
   mainPanel(
-    div(style = 'padding-top: 35px;', dataTableOutput("responses", width = 500)),
-    div(style = 'padding-top: 10;', dataTableOutput('submatriz', width = 500)),
-    div(style = 'padding-top: 10px;', dataTableOutput("completo", width = 500)), 
+    div(style = 'padding-top: 35px;', dataTableOutput("responses")),
+    div(style = 'padding-top: 35px;', dataTableOutput('submatriz')),
+    # div(style = 'margin-top: 35px;', dataTableOutput("completo")),
   )
   ),
   
@@ -139,47 +194,63 @@ h2 {
       data
     })
     
-    # Al apretar el botón se guarda la persona
+    # GUARDAR NUEVA PERSONA
     observeEvent(input$submit, {
       saveData(formData())
       submatriz = loadData()
     })
     
-    # Mostrar y actualizar
+    # TABLA 1
     output$responses <- renderDataTable({
       input$submit
-      datatable(loadData())
-      # datatable(DatosPelis)
+      datatable(loadData(), options = list(
+        headerCallback = JS(headerCallback),
+        autoWidth = TRUE,
+        searching = FALSE,
+        pageLength = 25,
+        columnDefs = list(list(width = '8px', targets = "_all"))
+      ))
     })
-    # Botón de completar
+    # TABLA 1 COMPLETA
     observeEvent(input$completar, {
-      output$completo <- renderDataTable({
-        datatable(netflix(loadData()))
-        # datatable(netflix(DatosPelis))
+      output$responses <- renderDataTable({
+        datatable(netflix(loadData()), options = list(
+          rowCallback = JS(changeCellColorGreen(indexes$rows, indexes$cols)),
+          headerCallback = JS(headerCallback),
+          autoWidth = TRUE,
+          searching = FALSE,
+          pageLength = 25,
+          columnDefs = list(list(width = '8px', targets = "_all"))
+        ))
       }) 
     })
-    
-    # Elegir celda para eliminar
-    observeEvent(input$elegir, {
-      submatriz[input$elegir_row, input$elegir_col] <<- NA
-      indexes$rows = rbind(indexes$rows, input$elegir_row)
-      indexes$cols = rbind(indexes$cols, input$elegir_col)
-      output$submatriz = renderDataTable({
-         datatable(submatriz, options = list(
-           dom = "t",
-           rowCallback = JS(changeCellColorRed(indexes$rows, indexes$cols)),
-           # autoWidth = TRUE,
-           # columnDefs = list(list(width = '50px', targets = 1))
-         ))
+  
+    # CAMBIAR VALOR DE CELDA
+    observeEvent(input$cambiar_valor_boton, {
+      changeData(input$elegir_row_cambiar, input$elegir_col_cambiar, input$cambiar_num)
+      output$responses = renderDataTable({
+        datatable(loadData(), options = list(
+          headerCallback = JS(headerCallback), 
+          autoWidth = TRUE,
+          searching = FALSE,
+          pageLength = 25,
+          columnDefs = list(list(width = '8px', targets = "_all"))
+        ))
       })
     })
-    # Completar la matriz con celdas eliminadas
-    observeEvent(input$completarSubMatriz, {
-      output$submatriz = renderDataTable({
-        datatable(netflix(submatriz), options = list(
-          dom = "t",
-          rowCallback = JS(changeCellColorGreen(indexes$rows, indexes$cols)),
-          ))
+
+    observeEvent(input$pintar, {
+      indexes$rows = rbind(indexes$rows, input$pintar_row)
+      indexes$cols = rbind(indexes$cols, input$pintar_col)
+      output$responses = renderDataTable({
+        datatable(loadData(), options = list(
+          rowCallback = JS(changeCellColorRed(indexes$rows, indexes$cols)),
+          headerCallback = JS(headerCallback),
+          autoWidth = TRUE,
+          searching = FALSE,
+          pageLength = 25,
+          columnDefs = list(list(width = '8px', targets = "_all"))
+        ))
       })
     })
   }

@@ -15,9 +15,4 @@ loadData <- function() {
 }
 resp = loadData()
 
-names = NULL
-for (file in data) {
-  names = c(names, file$nombre)
-}
-
 
