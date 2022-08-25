@@ -18,10 +18,13 @@ source('ScriptsVisuales.R')
 
 # Para borrar celdas específicas de la tabla
 submatriz = loadData()
+# Para pintar celdas especificas
 indexes = reactiveValues()
 indexes$rows = NULL
 indexes$cols = NULL
 
+cantidad = reactiveValues()
+cantidad$entradas = dim(submatriz)[2]
 
 borrarIndex = function(indexes) {
   indexes$rows = NULL
@@ -35,7 +38,7 @@ headerCallback <- c(
   "  var betterCells = [];",
   "  $ths.each(function(){",
   "    var cell = $(this);",
-  "    var newDiv = $('<div>', {height: 'auto', width: '8px'});",
+  "    var newDiv = $('<div>', {height: 'auto'});",
   "    var newInnerDiv = $('<div>', {text: cell.text()});",
   "    newDiv.css({margin: 'auto'});",
   "    newInnerDiv.css({",
@@ -74,15 +77,15 @@ shinyApp(
     }
    
    @import url('https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap');
-
+  @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed&display=swap');
 body {
   background-color:  white;
-  color: rgb(54, 31, 31); /* text color */
+  color: rgb(54, 31, 31);
 }
 
 /* Change header text to imported font */
 h2 {
-    font-family: 'Bebas Neue';
+    font-family: 'Roboto Condensed';
     text-transform: uppercase;
     font-weight: 900;
     color: #E50914;
@@ -107,7 +110,7 @@ h2 {
         inputId = "nombre",
         label = 'Nombre',
         value = '',
-        width = '200px'
+        width = '100px'
       ),
       numericInput(
         inputId = "peli1", 
@@ -129,8 +132,27 @@ h2 {
       
       div(style="display:flex; justify-content:left",
         div(style='padding:2px', actionButton("submit", "Submit")),
-        div(style='padding:2px', actionButton("completar", "Completar")),
+        div(style='padding:2px', actionButton("completar", "Completar Todo")),
         
+      ),
+  
+      h3("Pintar celda"),
+      helpText("Elija la columna y fila de la celda que desea pintar."),
+      
+      div(style="display:flex; justify-content:left",
+          div(style='padding:2px',
+              numericInput(
+                inputId = 'pintar_row',
+                label = 'Fila',
+                value = NA,
+                width = '60px')),
+          div(style='padding:2px',
+              numericInput(
+                inputId = 'pintar_col',
+                label = 'Columna',
+                value = NA,
+                width = '60px')),
+          div(style='margin-top:27px', actionButton('pintar', 'Pintar')),
       ),
       
       # CAMBIAR VALOR
@@ -157,31 +179,10 @@ h2 {
             width = '60px')),
       div(style='margin-top:27px', actionButton('cambiar_valor_boton', 'Cambiar'))
       ),
-  
-  h3("Pintar celda"),
-  helpText("Elija la columna y fila de la celda que desea pintar."),
-
-    div(style="display:flex; justify-content:left",
-        div(style='padding:2px',
-            numericInput(
-              inputId = 'pintar_row',
-              label = 'Fila',
-              value = NA,
-              width = '60px')),
-        div(style='padding:2px',
-            numericInput(
-              inputId = 'pintar_col',
-              label = 'Columna',
-              value = NA,
-              width = '60px')),
-      div(style='margin-top:27px', actionButton('pintar', 'Pintar')),
-    ),
 ),
   
   mainPanel(
-    div(style = 'padding-top: 35px;', dataTableOutput("responses")),
-    div(style = 'padding-top: 35px;', dataTableOutput('submatriz')),
-    # div(style = 'margin-top: 35px;', dataTableOutput("completo")),
+    div(style = 'padding-top: 35px;', dataTableOutput("responses"))
   )
   ),
   
@@ -198,59 +199,67 @@ h2 {
     observeEvent(input$submit, {
       saveData(formData())
       submatriz = loadData()
+      cantidad$entradas = dim(submatriz)[2]
     })
     
-    # TABLA 1
+    # TABLA INCOMPLETA
     output$responses <- renderDataTable({
       input$submit
       datatable(loadData(), options = list(
         headerCallback = JS(headerCallback),
-        autoWidth = TRUE,
+        autoWidth = FALSE,
         searching = FALSE,
-        pageLength = 25,
-        columnDefs = list(list(width = '8px', targets = "_all"))
-      ))
+        scrollX = TRUE,
+        columnDefs = list(list(width = '5px', targets =1:cantidad$entradas, className = 'dt-center'))
+      ),
+      selection = "none")
     })
-    # TABLA 1 COMPLETA
+    
+    
+    # COMPLETAR TODO
     observeEvent(input$completar, {
       output$responses <- renderDataTable({
         datatable(netflix(loadData()), options = list(
           rowCallback = JS(changeCellColorGreen(indexes$rows, indexes$cols)),
           headerCallback = JS(headerCallback),
-          autoWidth = TRUE,
+          autoWidth = FALSE,
           searching = FALSE,
-          pageLength = 25,
-          columnDefs = list(list(width = '8px', targets = "_all"))
-        ))
+          scrollX = TRUE,
+          columnDefs = list(list(width = '5px', targets =1:cantidad$entradas, className = 'dt-center'))
+        ),
+        selection = "none")
       }) 
     })
   
-    # CAMBIAR VALOR DE CELDA
-    observeEvent(input$cambiar_valor_boton, {
-      changeData(input$elegir_row_cambiar, input$elegir_col_cambiar, input$cambiar_num)
-      output$responses = renderDataTable({
-        datatable(loadData(), options = list(
-          headerCallback = JS(headerCallback), 
-          autoWidth = TRUE,
-          searching = FALSE,
-          pageLength = 25,
-          columnDefs = list(list(width = '8px', targets = "_all"))
-        ))
-      })
-    })
-
+    # PINTAR CELDA
     observeEvent(input$pintar, {
       indexes$rows = rbind(indexes$rows, input$pintar_row)
       indexes$cols = rbind(indexes$cols, input$pintar_col)
       output$responses = renderDataTable({
         datatable(loadData(), options = list(
           rowCallback = JS(changeCellColorRed(indexes$rows, indexes$cols)),
-          headerCallback = JS(headerCallback),
-          autoWidth = TRUE,
+          headerCallback = JS(headerCallback), 
+          autoWidth = FALSE,
           searching = FALSE,
-          pageLength = 25,
-          columnDefs = list(list(width = '8px', targets = "_all"))
-        ))
+          scrollX = TRUE,
+          columnDefs = list(list(width = '5px', targets =1:cantidad$entradas, className = 'dt-center'))
+        ),
+        selection = "none")
+      })
+    })
+    
+    # CAMBIAR VALOR DE CELDA
+    observeEvent(input$cambiar_valor_boton, {
+      changeData(input$elegir_row_cambiar, input$elegir_col_cambiar, input$cambiar_num)
+      output$responses = renderDataTable({
+        datatable(loadData(), options = list(
+          headerCallback = JS(headerCallback), 
+          autoWidth = FALSE,
+          searching = FALSE,
+          scrollX = TRUE,
+          columnDefs = list(list(width = '5px', targets =1:cantidad$entradas, className = 'dt-center'))
+        ),
+        selection = "none")
       })
     })
   }

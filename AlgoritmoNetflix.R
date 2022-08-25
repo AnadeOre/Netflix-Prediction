@@ -17,7 +17,7 @@ netflix = function(DatosPelis) {
   # LAMBDA=1
   # LAMBDA=norm(PX,"2")/1.5 #Este es el que considera en el paper
   # LAMBDA
-  LAMBDA = lambda(X)
+  LAMBDA = lambda2(X)
   
   #Hacemos el algoritmo iterativo que busca las matrices U,D,V
   #Obs: en sofImpute se puede modificar type="svd","als", segun que metodo queremos usar
