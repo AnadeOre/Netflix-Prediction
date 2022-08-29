@@ -1,53 +1,189 @@
-outputDir <- "responses"
+library("aws.s3")
+source('AlgoritmoNetflix.R')
+source('Credentials.R')
+
+# Cosas AWS
+credentials = getCredentials()
+bucketname <- credentials$bucketname
+Sys.setenv("AWS_ACCESS_KEY_ID" = credentials$AWS_ACCESS_KEY_ID,
+           "AWS_SECRET_ACCESS_KEY" = credentials$AWS_SECRET_ACCESS_KEY,
+           "AWS_DEFAULT_REGION" = credentials$AWS_DEFAULT_REGION)
+get_bucket_df(bucketname)[1]
+# Fin cosas AWS
+
 
 # Guardar nuevas entradas
-saveData <- function(data) {
-  data <- t(data)
-  # Create a unique file name
+saveData <- function(data, names) {
+  print(names)
   print(data)
-  fileName <- sprintf("%s_%s.csv", as.integer(Sys.time()), digest::digest(data))
-  # Write the file to the local system
-  write.csv(
-    x = data,
-    file = file.path(outputDir, fileName), 
-    row.names = FALSE, quote = TRUE
-  )
+  print(data[1] %in% names)
+   if (data[1] == '') {
+      data[1] = paste('Usuario', round(runif(1, min=1, max = 1000)), sep = '')
+   }
+  if (data[1] %in% names) {
+      data[1] = paste(data[1], round(runif(1, min=1, max = 1000)), sep = '')
+      print(data[1])
+  }
+  for (i in 2:24) {
+    if (!is.na(data[i]) & as.numeric(data[i]) > 10) {
+      data[i] = '10'
+    }
+    if (!is.na(data[i]) & as.numeric(data[i]) < 0) {
+      data[i] = '1'
+    }
+  }
+   data2 = paste0(
+      paste(names(data), collapse = ","), "\n",
+      paste(unname(data), collapse = ",")
+    )
+   print(data2)
+    file_name <- sprintf("%s_%s.csv", as.integer(Sys.time()), digest::digest(data2))
+  
+    put_object(file = charToRaw(data2), object = file_name, bucket = bucketname)
+}
+
+areEmpty = function(datos) {
+  n = dim(datos)[1]
+  m = dim(datos)[2]
+  filas = NULL
+  columnas = NULL
+  for (i in 1:n) {
+    for (j in 1:m) {
+      if (is.na(datos[i,j])) {
+        columnas = c(columnas, j)
+        filas = c(filas, i)
+      }
+    }
+  }
+  return(list(rows = filas, cols = columnas))
 }
 
 # Cargar datos de la base
 loadData <- function() {
-  # Leer archivos
-  files <- list.files(outputDir, full.names = TRUE)
-  data <- lapply(files, read.csv, stringsAsFactors = FALSE) 
-  # Acomodar nombres 
-  dataFull <- do.call(rbind, data)
-  rownames(dataFull) = dataFull[,1]
-  dataFull = dataFull[,-1]
-  if (!is.null(dataFull)) {
-    dataFull = t(dataFull)
+  file_names <- get_bucket_df(bucketname)[["Key"]]
+  # Read all files into a list
+  data <- lapply(file_names, function(x) {
+    object <- get_object(x , bucketname)
+    object_data <- readBin(object, "character")
+    read.csv(text = object_data, stringsAsFactors = FALSE)
+  })
+  # Concatenate all data together into one data.frame
+  data <- do.call(rbind, data)
+  rownames(data) = data[,1]
+  data = data[,-1]
+  if (!is.null(data)) {
+    data = t(data)
+    if (dim(data)[2]>= 2) {
+      data[1:23,]
+      # paraPintar = areEmpty(data[1:23,])
+      # pintar_filas = paraPintar$rows
+      # pintar_columnas = paraPintar$cols
+      # return(list(data = , filas = pintar_filas, columnas = pintar_columnas))
+    }
   }
-  dataFull
 }
 
+loadPainted = function() {
+  
+  file_names <- get_bucket_df(bucketname)[["Key"]]
+  # Read all files into a list
+  data <- lapply(file_names, function(x) {
+    object <- get_object(x , bucketname)
+    object_data <- readBin(object, "character")
+    read.csv(text = object_data, stringsAsFactors = FALSE)
+  })
+  # Concatenate all data together into one data.frame
+  data <- do.call(rbind, data)
+  rownames(data) = data[,1]
+  data = data[,-1]
+  if (!is.null(data)) {
+    data = t(data)
+  }
+  
+  columnas = NULL
+  filas = NULL
+  if (!is.null(data)) {
+    for (j in 1:dim(data)[2]) {
+      persona = data[,j]
+      solopintar = persona[-(1:23)]
+      solopelis = persona[-(24:length(persona))]
+      for (i in 1:length(solopintar)) {
+        if (!is.na(solopintar[i]) & solopintar[i] != F) {
+          filas = c(filas, i)
+          columnas = c(columnas, j)
+        }
+      }
+    }
+    if (!is.null(columnas)) {
+      columnas = matrix(columnas, length(columnas),1)
+      filas = matrix(filas, length(filas),1)
+      return(list(rows = filas, cols = columnas))
+    }    
+  }
+}
+  
+  
 # Cambiar valor
 changeData = function(row, col, valor) {
-  outputDir <- "~/Documents/ShinyR/Pelis-Netflix/responses"
+  if(!is.na(row) & !is.na(col)) {
+    if (!is.na(valor)) {
+      if (as.numeric(valor) <0){
+        valor = 1
+      }
+      if (as.numeric(valor)>10) {
+        valor = 10
+      }
+    }
+    
+    file_names <- get_bucket_df(bucketname)[["Key"]]
+    # Read all files into a list
+    data <- lapply(file_names, function(x) {
+      object <- get_object(x , bucketname)
+      object_data <- readBin(object, "character")
+      read.csv(text = object_data, stringsAsFactors = FALSE)
+    })
+    # Concatenate all data together into one data.frame
+    data <- do.call(rbind, data)
+    rownames(data) = data[,1]
+    data = data[,-1]
+    if (!is.null(data)) {
+      data = t(data)
+    }
+    resp = data
+    
+    nombre_select = colnames(resp)[col]
+    resp[row, col] = valor
+    rownames(resp) = NULL
+    colnames(resp) = NULL
+    columna = c(nombre_select,resp[,col])
+    columna = data.frame(columna)
+    fields2 = c("nombre", "Toy Story", "Kung Fu Panda", "Encanto", "Sonic", "Ralph el Demoledor", "Minions", "Coco", "Intensamente",
+                "Cars", "Buscando a Nemo", "Avengers", "Hotel Transilvania", "Frozen", "Red", "Luca", "Eternals",
+                "Los Increibles", "Unidos", "El Rey León", "Grandes Heroes", "Cruella", "Spider Man", "Soul",
+                "Toy_Story_check", "Kung_Fu_Panda_check", "Encanto_check", "Sonic_check", "Ralph_el_Demoledor_check", "Minions_check", "Coco_check", "Intensamente_check",
+                "Cars_check", "Buscando_a_Nemo_check", "Avengers_check", "Hotel_Transilvania_check", "Frozen_check", "Red_check", "Luca_check", "Eternals_check",
+                "Los_Increibles_check", "Unidos_check", "El_Rey_León_check", "Grandes_Heroes_check", "Cruella_check", "Spider_Man_check", "Soul_check")
+    
+    rownames(columna) = titulo
+    columna = t(columna)
+    
+    filename = file_names[col]
+    data2 = paste0(
+      paste(colnames(columna), collapse = ","), "\n",
+      paste(unname(columna), collapse = ",")
+    )
+    put_object(file = charToRaw(data2), object = filename, bucket = bucketname)
+  }
+  
+}
+
+mostrarPintados = function(filas, columnas) {
   resp = loadData()
-  nombre_select = colnames(resp)[col]
-  resp[row, col] = valor
-  rownames(resp) = NULL
-  colnames(resp) = NULL
-  columna = c(nombre_select,resp[,col])
-  columna = data.frame(columna)
-  titulo = c('nombre', 'peli1', 'peli2', 'peli3')
-  rownames(columna) = titulo
-  colnames(columna) = NULL
-  columna = t(columna)
-  archivo = list.files(outputDir, full.names = TRUE)[col]
-  archivo_editar = strsplit(archivo, '/')[[1]][8]
-  write.csv(
-    x = columna,
-    file = file.path(outputDir, archivo_editar),
-    row.names = FALSE, quote = TRUE
-  )
+  completa = netflix(resp)
+  if(!is.null(filas)) {
+    for (i in 1:dim(filas)[1]) {
+      resp[filas[i,1], columnas[i,1]] = completa[filas[i,1], columnas[i,1]]
+    }
+  }
+  resp
 }

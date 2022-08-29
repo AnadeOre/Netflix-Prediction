@@ -61,7 +61,7 @@ lambda2=function(X)
   
   ## me quedo con una submuestra de observados (no NA) 
   R=min(300,nrow(X)*ncol(X))
-  B=10
+  B=5
   lambdas=numeric(B)
   for(k in 1:B)
   {
