@@ -1,15 +1,24 @@
 source('Lambda.R')
 
-netflix = function(DatosPelis) {
+
+netflix = function(DatosPelis, datosIniciales) {
+  names = colnames(DatosPelis)
+  movies = rownames(DatosPelis)
+  datosIniciales = matrix(as.numeric(datosIniciales), ncol = ncol(datosIniciales))
+  DatosPelis = matrix(as.numeric(DatosPelis), ncol = ncol(DatosPelis))
   #Segun datos colocamos las respuestas extremas
   vmin=1
   vmax=10
-  ##--------------------##
   #renombramos la matriz con datos faltantes
   X=DatosPelis
   X=X[,1:dim(X)[2]]
+  print(dim(datosIniciales))
   X = as.matrix(X)
-  
+  datosIniciales = as.matrix(datosIniciales)
+  m = dim(datosIniciales)[2]
+  X = cbind(datosIniciales, DatosPelis)
+  X = as.matrix(X)
+  maxim = dim(X)[2]
   #Creamos la matriz proyecci?n(lo uso solo para calcular lambda)
   PX=data.matrix(X)
   PX[is.na(PX)==T]=0
@@ -43,5 +52,8 @@ netflix = function(DatosPelis) {
   
   #?CUIDADO!  N O   C O R R E R  o lo vas a pisar!
   guardar=Y
+  Y = Y[,(m+1):maxim]
+  colnames(Y) = names
+  rownames(Y) = movies
   Y
 }

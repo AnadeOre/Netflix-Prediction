@@ -13,11 +13,9 @@ get_bucket_df(bucketname)[1]
 
 
 # Guardar nuevas entradas
-saveData <- function(data, names) {
-  print(names)
-  print(data)
-  print(data[1] %in% names)
-   if (data[1] == '') {
+saveData <- function(data) {
+  names = colnames(loadData()$new)
+  if (data[1] == '') {
       data[1] = paste('Usuario', round(runif(1, min=1, max = 1000)), sep = '')
    }
   if (data[1] %in% names) {
@@ -60,34 +58,67 @@ areEmpty = function(datos) {
 
 # Cargar datos de la base
 loadData <- function() {
+  
+  newPeople = NULL
+  dbInicial = NULL
+  
   file_names <- get_bucket_df(bucketname)[["Key"]]
-  # Read all files into a list
-  data <- lapply(file_names, function(x) {
+  file_names = rev(file_names)
+  
+  for (file in file_names) {
+    if (startsWith(file, 'persona')) {
+      dbInicial = c(dbInicial, file)
+    }
+    else {
+      newPeople = c(newPeople, file)
+    }
+  }
+  # Establezco la base de datos inicial
+  dataDBInicial <- lapply(dbInicial, function(x) {
     object <- get_object(x , bucketname)
     object_data <- readBin(object, "character")
     read.csv(text = object_data, stringsAsFactors = FALSE)
   })
-  # Concatenate all data together into one data.frame
-  data <- do.call(rbind, data)
-  rownames(data) = data[,1]
-  data = data[,-1]
-  if (!is.null(data)) {
-    data = t(data)
-    if (dim(data)[2]>= 2) {
-      data[1:23,]
-      # paraPintar = areEmpty(data[1:23,])
-      # pintar_filas = paraPintar$rows
-      # pintar_columnas = paraPintar$cols
-      # return(list(data = , filas = pintar_filas, columnas = pintar_columnas))
+  dataDBInicial <- do.call(rbind, dataDBInicial)
+  colnames(dataDBInicial) = NULL
+  rownames(dataDBInicial) = NULL
+  dataDBInicial = t(dataDBInicial)
+  dataDBInicial = dataDBInicial[-1,]
+  
+  # Ahora acomodo los que se van a ver
+  dataNew <- lapply(newPeople, function(x) {
+    object <- get_object(x , bucketname)
+    object_data <- readBin(object, "character")
+    read.csv(text = object_data, stringsAsFactors = FALSE)
+  })
+  dataNew <- do.call(rbind, dataNew)
+  rownames(dataNew) = dataNew[,1]
+  dataNew = dataNew[,-1]
+  if (!is.null(dataNew)) {
+    dataNew = t(dataNew)
+    if (dim(dataNew)[2]>= 2) {
+      dataNew = dataNew[1:23,]
+      dataDBInicial = dataDBInicial[1:23,]
+      return(list(new = dataNew, inicial = dataDBInicial))
     }
   }
 }
 
+
 loadPainted = function() {
   
+  newPeople = NULL
+  
   file_names <- get_bucket_df(bucketname)[["Key"]]
-  # Read all files into a list
-  data <- lapply(file_names, function(x) {
+  file_names = rev(file_names)
+  
+  for (file in file_names) {
+    if (!startsWith(file, 'persona')) {
+      newPeople = c(newPeople, file)
+    }
+  }
+
+  data <- lapply(newPeople, function(x) {
     object <- get_object(x , bucketname)
     object_data <- readBin(object, "character")
     read.csv(text = object_data, stringsAsFactors = FALSE)
@@ -135,9 +166,19 @@ changeData = function(row, col, valor) {
       }
     }
     
+    
+    newPeople = NULL
+    
     file_names <- get_bucket_df(bucketname)[["Key"]]
-    # Read all files into a list
-    data <- lapply(file_names, function(x) {
+    file_names = rev(file_names)
+    
+    for (file in file_names) {
+      if (!startsWith(file, 'persona')) {
+        newPeople = c(newPeople, file)
+      }
+    }
+    
+    data <- lapply(newPeople, function(x) {
       object <- get_object(x , bucketname)
       object_data <- readBin(object, "character")
       read.csv(text = object_data, stringsAsFactors = FALSE)
@@ -164,10 +205,10 @@ changeData = function(row, col, valor) {
                 "Cars_check", "Buscando_a_Nemo_check", "Avengers_check", "Hotel_Transilvania_check", "Frozen_check", "Red_check", "Luca_check", "Eternals_check",
                 "Los_Increibles_check", "Unidos_check", "El_Rey_León_check", "Grandes_Heroes_check", "Cruella_check", "Spider_Man_check", "Soul_check")
     
-    rownames(columna) = titulo
+    rownames(columna) = fields2
     columna = t(columna)
     
-    filename = file_names[col]
+    filename = newPeople[col]
     data2 = paste0(
       paste(colnames(columna), collapse = ","), "\n",
       paste(unname(columna), collapse = ",")
@@ -178,8 +219,9 @@ changeData = function(row, col, valor) {
 }
 
 mostrarPintados = function(filas, columnas) {
-  resp = loadData()
-  completa = netflix(resp)
+  Datos = loadData()
+  resp = Datos$new
+  completa = netflix(Datos$new, Datos$inicial)
   if(!is.null(filas)) {
     for (i in 1:dim(filas)[1]) {
       resp[filas[i,1], columnas[i,1]] = completa[filas[i,1], columnas[i,1]]

@@ -14,7 +14,7 @@ source('AlgoritmoNetflix.R')
 source('ScriptsVisuales.R')
 
 # Para borrar celdas específicas de la tabla
-submatriz = loadData()
+submatriz = loadData()$new
 # Para pintar celdas especificas
 indexes = reactiveValues()
 indexes$rows = NULL
@@ -486,16 +486,16 @@ body {
 
     # GUARDAR NUEVA PERSONA
     observeEvent(input$submit, {
-      saveData(formData(), colnames(submatriz))
-      submatriz = loadData()
+      saveData(formData())
+      submatriz = loadData()$new
       cantidad$entradas = dim(submatriz)[2]
-      loadData()
+      loadData()$new
     })
 
     # TABLA INCOMPLETA
     output$responses <- renderDataTable({
       pintar = loadPainted()
-      datatable(loadData(), options = list(
+      datatable(loadData()$new, options = list(
         rowCallback = JS(changeCellColorRed(pintar$rows, pintar$cols)),
         headerCallback = JS(headerCallback),
         autoWidth = FALSE,
@@ -528,15 +528,15 @@ body {
     observeEvent(input$completar, {
       output$responses <- renderDataTable({
         allData = loadData()
-        pintar = areEmpty(allData)
-        datatable(netflix(allData), options = list(
-          rowCallback = JS(changeCellColorGreen(pintar$rows, pintar$cols)),
-          headerCallback = JS(headerCallback),
-          autoWidth = FALSE,
-          pageLength = 24,
-          searching = FALSE,
-          scrollX = TRUE,
-          columnDefs = list(list(width = '5px', targets =1:cantidad$entradas, className = 'dt-center'))
+        pintar = areEmpty(allData$new)
+        datatable(netflix(allData$new, allData$inicial), options = list(
+        rowCallback = JS(changeCellColorGreen(pintar$rows, pintar$cols)),
+        headerCallback = JS(headerCallback),
+        autoWidth = FALSE,
+        pageLength = 24,
+        searching = FALSE,
+        scrollX = TRUE,
+        columnDefs = list(list(width = '5px', targets =1:cantidad$entradas, className = 'dt-center'))
         ),
         selection = "none")
       })
@@ -564,10 +564,10 @@ body {
     # CAMBIAR VALOR DE CELDA
     observeEvent(input$cambiar_valor_boton, {
       pintar = loadPainted()
-      allData = loadData()
       changeData(input$elegir_row_cambiar, input$elegir_col_cambiar, input$cambiar_num)
+      allData = loadData()
       output$responses = renderDataTable({
-        datatable(allData, options = list(
+        datatable(allData$new, options = list(
           headerCallback = JS(headerCallback),
           rowCallback = JS(changeCellColorRed(pintar$rows, pintar$cols)),
           autoWidth = FALSE,
