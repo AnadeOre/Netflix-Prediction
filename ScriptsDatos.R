@@ -1,28 +1,72 @@
-library("aws.s3")
+library('mongolite')
 source('AlgoritmoNetflix.R')
 source('Credentials.R')
 
-# Cosas AWS
 credentials = getCredentials()
-bucketname <- credentials$bucketname
-Sys.setenv("AWS_ACCESS_KEY_ID" = credentials$AWS_ACCESS_KEY_ID,
-           "AWS_SECRET_ACCESS_KEY" = credentials$AWS_SECRET_ACCESS_KEY,
-           "AWS_DEFAULT_REGION" = credentials$AWS_DEFAULT_REGION)
-get_bucket_df(bucketname)[1]
-# Fin cosas AWS
+DBInicial = mongo(collection = credentials$collectionName,db =  credentials$databaseName, url = credentials$url)
+DBNew = mongo(collection = credentials$newColName, db =  credentials$databaseName, url = credentials$url)
+
+
+loadIniciales = function () {
+  matriz = DBInicial$find()
+  cantidadPersonas = dim(matriz)[1]
+  fields = c("nombre", "Stranger Things", "Elite", "Spider Man", "Cobra Kai", "Rebelde Way", "A Dos Metros de Ti",
+             "The Umbrella Academy", "Anne With an e", "Estamos Muertos", "Riverdale", "Go! Vive a tu manera",
+             "Yo Nunca", "Un Amor Tan Hermoso", "El Juego del Calamar", "Cielo Grande", "La Casa de Papel",
+             "Avengers", "Eternals", "The Boys", "Wanda Vision",
+             "Stranger_Things_check", "Elite_check", "Spider_Man_check", "Cobra_Kai_check", "Rebelde_Way_check",
+             "A_Dos_Metros_de_Ti_check", "The_Umbrella_Academy_check", "Anne_With_an_e_check",
+             "Estamos_Muertos_check", "Riverdale_check", "Go!_Vive_a_tu_manera_check", "Yo_Nunca_check",
+             "Un_Amor_Tan_Hermoso_check", "El_Juego_del_Calamar_check", "Cielo_Grande_check", "La_Casa_de_Papel_check",
+             "Avengers_check", "Eternals_check", "The_Boys_check", "Wanda_Vision_check")
+  fields2 = c("nombre", "Stranger_Things", "Elite", "Spider_Man", "Cobra_Kai", "Rebelde_Way", "A_Dos_Metros_de_Ti",
+              "The_Umbrella_Academy", "Anne_With_an_e", "Estamos_Muertos", "Riverdale", "Go!_Vive_a_tu_manera",
+              "Yo_Nunca", "Un_Amor_Tan_Hermoso", "El_Juego_del_Calamar", "Cielo_Grande", "La_Casa_de_Papel",
+              "Avengers", "Eternals", "The_Boys", "Wanda_Vision",
+              "Stranger_Things_check", "Elite_check", "Spider_Man_check", "Cobra_Kai_check", "Rebelde_Way_check",
+              "A_Dos_Metros_de_Ti_check", "The_Umbrella_Academy_check", "Anne_With_an_e_check",
+              "Estamos_Muertos_check", "Riverdale_check", "Go!_Vive_a_tu_manera_check", "Yo_Nunca_check",
+              "Un_Amor_Tan_Hermoso_check", "El_Juego_del_Calamar_check", "Cielo_Grande_check", "La_Casa_de_Papel_check",
+              "Avengers_check", "Eternals_check", "The_Boys_check", "Wanda_Vision_check")
+  
+  
+  nuevamatriz = matrix(NA, length(fields),cantidadPersonas)
+  rownames(nuevamatriz) = fields
+  colnames(nuevamatriz) = matriz[,1]
+  # nuevamatriz = nuevamatriz[-1,]
+  
+  for (movie in 2:41) {
+    for (persona in 1:cantidadPersonas) {
+      if (!is.null(matriz[persona, (fields2[movie])])) {
+        if (!is.na(matriz[persona, (fields2[movie])])) {
+          nuevamatriz[fields[movie], persona] = matriz[persona, fields2[movie]]  
+        }
+      }
+    }
+  }
+  
+  dataNew = nuevamatriz
+  if (!is.null(dataNew)) {
+    if (dim(dataNew)[2]>= 2) {
+      dataNew = dataNew[2:21,]
+    }
+  }
+  dataNew
+}
+
 
 
 # Guardar nuevas entradas
 saveData <- function(data) {
+  print(data)
   names = colnames(loadData()$new)
   if (data[1] == '') {
       data[1] = paste('Usuario', round(runif(1, min=1, max = 1000)), sep = '')
    }
   if (data[1] %in% names) {
       data[1] = paste(data[1], round(runif(1, min=1, max = 1000)), sep = '')
-      print(data[1])
   }
-  for (i in 2:24) {
+  for (i in 2:21) {
     if (!is.na(data[i]) & as.numeric(data[i]) > 10) {
       data[i] = '10'
     }
@@ -30,14 +74,12 @@ saveData <- function(data) {
       data[i] = '1'
     }
   }
-   data2 = paste0(
-      paste(names(data), collapse = ","), "\n",
-      paste(unname(data), collapse = ",")
-    )
-   print(data2)
-    file_name <- sprintf("%s_%s.csv", as.integer(Sys.time()), digest::digest(data2))
   
-    put_object(file = charToRaw(data2), object = file_name, bucket = bucketname)
+  data <- t(data)
+  # Create a unique file name
+  data = data.frame(data)
+  print(data)
+  DBNew$insert(data)
 }
 
 areEmpty = function(datos) {
@@ -58,98 +100,118 @@ areEmpty = function(datos) {
 
 # Cargar datos de la base
 loadData <- function() {
-  
-  newPeople = NULL
-  dbInicial = NULL
-  
-  file_names <- get_bucket_df(bucketname)[["Key"]]
-  file_names = rev(file_names)
-  
-  for (file in file_names) {
-    if (startsWith(file, 'persona')) {
-      dbInicial = c(dbInicial, file)
+  iniciales= loadIniciales()
+  matriz = DBNew$find()
+  matriz = matriz[nrow(matriz):1, ]
+  cantidadPersonas = dim(matriz)[1]
+  if (dim(matriz)[1]>0 & dim(matriz)[2]>0) {
+    fields = c("nombre", "Stranger Things", "Elite", "Spider Man", "Cobra Kai", "Rebelde Way", "A Dos Metros de Ti",
+                "The Umbrella Academy", "Anne With an e", "Estamos Muertos", "Riverdale", "Go! Vive a tu manera",
+                "Yo Nunca", "Un Amor Tan Hermoso", "El Juego del Calamar", "Cielo Grande", "La Casa de Papel",
+                "Avengers", "Eternals", "The Boys", "Wanda Vision",
+                "Stranger_Things_check", "Elite_check", "Spider_Man_check", "Cobra_Kai_check", "Rebelde_Way_check",
+                "A_Dos_Metros_de_Ti_check", "The_Umbrella_Academy_check", "Anne_With_an_e_check",
+                "Estamos_Muertos_check", "Riverdale_check", "Go!_Vive_a_tu_manera_check", "Yo_Nunca_check",
+                "Un_Amor_Tan_Hermoso_check", "El_Juego_del_Calamar_check", "Cielo_Grande_check", "La_Casa_de_Papel_check",
+                "Avengers_check", "Eternals_check", "The_Boys_check", "Wanda_Vision_check")
+    fields2 = c("nombre", "Stranger_Things", "Elite", "Spider_Man", "Cobra_Kai", "Rebelde_Way", "A_Dos_Metros_de_Ti",
+                "The_Umbrella_Academy", "Anne_With_an_e", "Estamos_Muertos", "Riverdale", "Go!_Vive_a_tu_manera",
+                "Yo_Nunca", "Un_Amor_Tan_Hermoso", "El_Juego_del_Calamar", "Cielo_Grande", "La_Casa_de_Papel",
+                "Avengers", "Eternals", "The_Boys", "Wanda_Vision",
+                "Stranger_Things_check", "Elite_check", "Spider_Man_check", "Cobra_Kai_check", "Rebelde_Way_check",
+                "A_Dos_Metros_de_Ti_check", "The_Umbrella_Academy_check", "Anne_With_an_e_check",
+                "Estamos_Muertos_check", "Riverdale_check", "Go!_Vive_a_tu_manera_check", "Yo_Nunca_check",
+                "Un_Amor_Tan_Hermoso_check", "El_Juego_del_Calamar_check", "Cielo_Grande_check", "La_Casa_de_Papel_check",
+                "Avengers_check", "Eternals_check", "The_Boys_check", "Wanda_Vision_check")
+    
+    
+   nuevamatriz = matrix(NA, length(fields),cantidadPersonas)
+    rownames(nuevamatriz) = fields
+    colnames(nuevamatriz) = matriz[,1]
+    # nuevamatriz = nuevamatriz[-1,]
+    
+    for (movie in 2:41) {
+      for (persona in 1:cantidadPersonas) {
+        if (!is.null(matriz[persona, (fields2[movie])])) {
+          if (!is.na(matriz[persona, (fields2[movie])])) {
+            nuevamatriz[fields[movie], persona] = matriz[persona, fields2[movie]]  
+          }
+        }
+      }
     }
-    else {
-      newPeople = c(newPeople, file)
-    }
-  }
-  # Establezco la base de datos inicial
-  dataDBInicial <- lapply(dbInicial, function(x) {
-    object <- get_object(x , bucketname)
-    object_data <- readBin(object, "character")
-    read.csv(text = object_data, stringsAsFactors = FALSE)
-  })
-  dataDBInicial <- do.call(rbind, dataDBInicial)
-  colnames(dataDBInicial) = NULL
-  rownames(dataDBInicial) = NULL
-  dataDBInicial = t(dataDBInicial)
-  dataDBInicial = dataDBInicial[-1,]
-  
-  # Ahora acomodo los que se van a ver
-  dataNew <- lapply(newPeople, function(x) {
-    object <- get_object(x , bucketname)
-    object_data <- readBin(object, "character")
-    read.csv(text = object_data, stringsAsFactors = FALSE)
-  })
-  dataNew <- do.call(rbind, dataNew)
-  rownames(dataNew) = dataNew[,1]
-  dataNew = dataNew[,-1]
-  if (!is.null(dataNew)) {
-    dataNew = t(dataNew)
-    if (dim(dataNew)[2]>= 2) {
-      dataNew = dataNew[1:23,]
-      dataDBInicial = dataDBInicial[1:23,]
-      return(list(new = dataNew, inicial = dataDBInicial))
-    }
+    
+    dataNew = nuevamatriz
+    if (!is.null(dataNew)) {
+      if (dim(dataNew)[2]>= 2) {
+        dataNew = dataNew[2:21,]
+        return(list(new = dataNew, inicial = iniciales))
+      }
+    }  
   }
 }
 
 
 loadPainted = function() {
   
-  newPeople = NULL
-  
-  file_names <- get_bucket_df(bucketname)[["Key"]]
-  file_names = rev(file_names)
-  
-  for (file in file_names) {
-    if (!startsWith(file, 'persona')) {
-      newPeople = c(newPeople, file)
-    }
-  }
-
-  data <- lapply(newPeople, function(x) {
-    object <- get_object(x , bucketname)
-    object_data <- readBin(object, "character")
-    read.csv(text = object_data, stringsAsFactors = FALSE)
-  })
-  # Concatenate all data together into one data.frame
-  data <- do.call(rbind, data)
-  rownames(data) = data[,1]
-  data = data[,-1]
-  if (!is.null(data)) {
-    data = t(data)
-  }
-  
-  columnas = NULL
-  filas = NULL
-  if (!is.null(data)) {
-    for (j in 1:dim(data)[2]) {
-      persona = data[,j]
-      solopintar = persona[-(1:23)]
-      solopelis = persona[-(24:length(persona))]
-      for (i in 1:length(solopintar)) {
-        if (!is.na(solopintar[i]) & solopintar[i] != F) {
-          filas = c(filas, i)
-          columnas = c(columnas, j)
+  matriz = DBNew$find()
+  matriz = matriz[nrow(matriz):1, ]
+  if (dim(matriz)[1]>0 & dim(matriz)[2]>0) {
+    cantidadPersonas = dim(matriz)[1]
+    
+    fields = c("nombre", "Stranger Things", "Elite", "Spider Man", "Cobra Kai", "Rebelde Way", "A Dos Metros de Ti",
+               "The Umbrella Academy", "Anne With an e", "Estamos Muertos", "Riverdale", "Go! Vive a tu manera",
+               "Yo Nunca", "Un Amor Tan Hermoso", "El Juego del Calamar", "Cielo Grande", "La Casa de Papel",
+               "Avengers", "Eternals", "The Boys", "Wanda Vision",
+               "Stranger_Things_check", "Elite_check", "Spider_Man_check", "Cobra_Kai_check", "Rebelde_Way_check",
+               "A_Dos_Metros_de_Ti_check", "The_Umbrella_Academy_check", "Anne_With_an_e_check",
+               "Estamos_Muertos_check", "Riverdale_check", "Go!_Vive_a_tu_manera_check", "Yo_Nunca_check",
+               "Un_Amor_Tan_Hermoso_check", "El_Juego_del_Calamar_check", "Cielo_Grande_check", "La_Casa_de_Papel_check",
+               "Avengers_check", "Eternals_check", "The_Boys_check", "Wanda_Vision_check")
+    fields2 = c("nombre", "Stranger_Things", "Elite", "Spider_Man", "Cobra_Kai", "Rebelde_Way", "A_Dos_Metros_de_Ti",
+                "The_Umbrella_Academy", "Anne_With_an_e", "Estamos_Muertos", "Riverdale", "Go!_Vive_a_tu_manera",
+                "Yo_Nunca", "Un_Amor_Tan_Hermoso", "El_Juego_del_Calamar", "Cielo_Grande", "La_Casa_de_Papel",
+                "Avengers", "Eternals", "The_Boys", "Wanda_Vision",
+                "Stranger_Things_check", "Elite_check", "Spider_Man_check", "Cobra_Kai_check", "Rebelde_Way_check",
+                "A_Dos_Metros_de_Ti_check", "The_Umbrella_Academy_check", "Anne_With_an_e_check",
+                "Estamos_Muertos_check", "Riverdale_check", "Go!_Vive_a_tu_manera_check", "Yo_Nunca_check",
+                "Un_Amor_Tan_Hermoso_check", "El_Juego_del_Calamar_check", "Cielo_Grande_check", "La_Casa_de_Papel_check",
+                "Avengers_check", "Eternals_check", "The_Boys_check", "Wanda_Vision_check")
+    nuevamatriz = matrix(NA, length(fields),cantidadPersonas)
+    rownames(nuevamatriz) = fields
+    colnames(nuevamatriz) = matriz[,1]
+    # nuevamatriz = nuevamatriz[-1,]
+    
+    for (movie in 2:41) {
+      for (persona in 1:cantidadPersonas) {
+        if (!is.null(matriz[persona, (fields2[movie])])) {
+          if (!is.na(matriz[persona, (fields2[movie])])) {
+            nuevamatriz[fields[movie], persona] = matriz[persona, fields2[movie]]  
+          }
         }
       }
     }
-    if (!is.null(columnas)) {
-      columnas = matrix(columnas, length(columnas),1)
-      filas = matrix(filas, length(filas),1)
-      return(list(rows = filas, cols = columnas))
-    }    
+    
+    data = nuevamatriz[-1,]
+    columnas = NULL
+    filas = NULL
+    if (!is.null(data)) {
+      for (j in 1:dim(data)[2]) {
+        persona = data[,j]
+        solopintar = persona[-(1:20)]
+        solopelis = persona[-(21:length(persona))]
+        for (i in 1:length(solopintar)) {
+          if (!is.na(solopintar[i]) & solopintar[i] != F) {
+            filas = c(filas, i)
+            columnas = c(columnas, j)
+          }
+        }
+      }
+      if (!is.null(columnas)) {
+        columnas = matrix(columnas, length(columnas),1)
+        filas = matrix(filas, length(filas),1)
+        return(list(rows = filas, cols = columnas))
+      }    
+    } 
   }
 }
   
@@ -165,57 +227,17 @@ changeData = function(row, col, valor) {
         valor = 10
       }
     }
-    
-    
-    newPeople = NULL
-    
-    file_names <- get_bucket_df(bucketname)[["Key"]]
-    file_names = rev(file_names)
-    
-    for (file in file_names) {
-      if (!startsWith(file, 'persona')) {
-        newPeople = c(newPeople, file)
-      }
-    }
-    
-    data <- lapply(newPeople, function(x) {
-      object <- get_object(x , bucketname)
-      object_data <- readBin(object, "character")
-      read.csv(text = object_data, stringsAsFactors = FALSE)
-    })
-    # Concatenate all data together into one data.frame
-    data <- do.call(rbind, data)
-    rownames(data) = data[,1]
-    data = data[,-1]
-    if (!is.null(data)) {
-      data = t(data)
-    }
-    resp = data
-    
+    resp = loadData()$new
     nombre_select = colnames(resp)[col]
-    resp[row, col] = valor
-    rownames(resp) = NULL
-    colnames(resp) = NULL
-    columna = c(nombre_select,resp[,col])
-    columna = data.frame(columna)
-    fields2 = c("nombre", "Toy Story", "Kung Fu Panda", "Encanto", "Sonic", "Ralph el Demoledor", "Minions", "Coco", "Intensamente",
-                "Cars", "Buscando a Nemo", "Avengers", "Hotel Transilvania", "Frozen", "Red", "Luca", "Eternals",
-                "Los Increibles", "Unidos", "El Rey León", "Grandes Heroes", "Cruella", "Spider Man", "Soul",
-                "Toy_Story_check", "Kung_Fu_Panda_check", "Encanto_check", "Sonic_check", "Ralph_el_Demoledor_check", "Minions_check", "Coco_check", "Intensamente_check",
-                "Cars_check", "Buscando_a_Nemo_check", "Avengers_check", "Hotel_Transilvania_check", "Frozen_check", "Red_check", "Luca_check", "Eternals_check",
-                "Los_Increibles_check", "Unidos_check", "El_Rey_León_check", "Grandes_Heroes_check", "Cruella_check", "Spider_Man_check", "Soul_check")
-    
-    rownames(columna) = fields2
-    columna = t(columna)
-    
-    filename = newPeople[col]
-    data2 = paste0(
-      paste(colnames(columna), collapse = ","), "\n",
-      paste(unname(columna), collapse = ",")
-    )
-    put_object(file = charToRaw(data2), object = filename, bucket = bucketname)
+    pelis = c("Stranger_Things", "Elite", "Spider_Man", "Cobra_Kai", "Rebelde_Way", "A_Dos_Metros_de_Ti",
+                "The_Umbrella_Academy", "Anne_With_an_e", "Estamos_Muertos", "Riverdale", "Go!_Vive_a_tu_manera",
+                "Yo_Nunca", "Un_Amor_Tan_Hermoso", "El_Juego_del_Calamar", "Cielo_Grande", "La_Casa_de_Papel",
+                "Avengers", "Eternals", "The_Boys", "Wanda_Vision")
+    peli_select = pelis[row]
+    cambiar = DBNew$find(paste0('{"nombre" : ','"', nombre_select,'"', '}') )
+    DBNew$update(paste0('{"nombre" : ','"', nombre_select,'"', '}'),
+                 paste0('{"$set":{"',peli_select,'": ','"',valor,'"','}}'))
   }
-  
 }
 
 mostrarPintados = function(filas, columnas) {

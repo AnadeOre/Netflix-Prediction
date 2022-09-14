@@ -1,13 +1,16 @@
 library(Matrix)
 library(softImpute)
 library(DT)
-# fields <- c("nombre", "peli 1", "peli dos", "peli3", "peli1_check", "peli2_check", "peli3_check")
-fields2 = c("nombre", "Toy Story", "Kung Fu Panda", "Encanto", "Sonic", "Ralph el Demoledor", "Minions", "Coco", "Intensamente",
-            "Cars", "Buscando a Nemo", "Avengers", "Hotel Transilvania", "Frozen", "Red", "Luca", "Eternals",
-            "Los Increibles", "Unidos", "El Rey León", "Grandes Heroes", "Cruella", "Spider Man", "Soul",
-            "Toy_Story_check", "Kung_Fu_Panda_check", "Encanto_check", "Sonic_check", "Ralph_el_Demoledor_check", "Minions_check", "Coco_check", "Intensamente_check",
-            "Cars_check", "Buscando_a_Nemo_check", "Avengers_check", "Hotel_Transilvania_check", "Frozen_check", "Red_check", "Luca_check", "Eternals_check",
-            "Los_Increibles_check", "Unidos_check", "El_Rey_León_check", "Grandes_Heroes_check", "Cruella_check", "Spider_Man_check", "Soul_check")
+
+fields2 = c("nombre", "Stranger Things", "Elite", "Spider Man", "Cobra Kai", "Rebelde Way", "A Dos Metros de Ti",
+            "The Umbrella Academy", "Anne With an e", "Estamos Muertos", "Riverdale", "Go Vive a tu Manera",
+            "Yo Nunca", "Un Amor Tan Hermoso", "El Juego del Calamar", "Cielo Grande", "La Casa de Papel",
+            "Avengers", "Eternals", "The Boys", "Wanda Vision",
+            "Stranger_Things_check", "Elite_check", "Spider_Man_check", "Cobra_Kai_check", "Rebelde_Way_check",
+            "A_Dos_Metros_de_Ti_check", "The_Umbrella_Academy_check", "Anne_With_an_e_check",
+            "Estamos_Muertos_check", "Riverdale_check", "Go_Vive_a_tu_Manera_check", "Yo_Nunca_check",
+            "Un_Amor_Tan_Hermoso_check", "El_Juego_del_Calamar_check", "Cielo_Grande_check", "La_Casa_de_Papel_check",
+            "Avengers_check", "Eternals_check", "The_Boys_check", "Wanda_Vision_check")
 # Cargar archivos con los scripts
 source('ScriptsDatos.R')
 source('AlgoritmoNetflix.R')
@@ -208,7 +211,7 @@ body {
       div(style='padding:2px', actionButton("completar", "Completar Todo")),
   ),
   h3("Agregar Datos"),
-    helpText("Complete los campos con números del 1 al 10 y no escriba nada si no vió la película."),  
+    helpText("Complete los campos con números del 1 al 10 y no escriba nada si no vió la película o serie."),  
     textInput(
         inputId = "nombre",
         label = 'Nombre',
@@ -216,211 +219,185 @@ body {
         width = '100px'
       ),
       div(numericInput(#1
-        inputId = "Toy Story", 
-        label = "1- Toy Story",
+        inputId = "Stranger Things", 
+        label = "1- Stranger Things",
         value = NA,
         width = '100px',
         min = 1,
         max = 10),
-       checkboxInput("Toy_Story_check", "Pintar Toy Story", FALSE), class = 'div_contenedor'),
+       checkboxInput("Stranger_Things_check", "Pintar Stranger Things", FALSE), class = 'div_contenedor'),
   
       div(numericInput(#2
-        inputId = "Kung Fu Panda", 
-        label = "2- Kung Fu Panda",
+        inputId = "Elite", 
+        label = "2- Elite",
         value = NA,
         width = '100px',
         min = 1,
         max = 10),
-       checkboxInput("Kung_Fu_Panda_check", "Pintar Kung Fu Panda", FALSE), class = 'div_contenedor'),
+       checkboxInput("Elite_check", "Pintar Elite", FALSE), class = 'div_contenedor'),
   
       div(numericInput(#3
-        inputId = "Encanto", 
-        label = "3- Encanto",
+        inputId = "Spider Man", 
+        label = "3- Spider Man",
         value = NA,
         width = '100px',
         min = 1,
         max = 10),
-       checkboxInput("Encanto_check", "Pintar Encanto", FALSE), class = 'div_contenedor'),
+       checkboxInput("Spider_Man_check", "Pintar Spider Man", FALSE), class = 'div_contenedor'),
       
       div(numericInput(#4
-        inputId = "Sonic", 
-        label = "4- Sonic",
+        inputId = "Cobra Kai", 
+        label = "4- Cobra Kai",
         value = NA,
         width = '100px',
         min = 1,
         max = 10),
-       checkboxInput("Sonic_check", "Pintar Sonic", FALSE), class = 'div_contenedor'),
+       checkboxInput("Cobra_Kai_check", "Pintar Cobra Kai", FALSE), class = 'div_contenedor'),
       
       div(numericInput(#5
-        inputId = "Ralph el Demoledor", 
-        label = "5- Ralph el Demoledor",
+        inputId = "Rebelde Way", 
+        label = "5- Rebelde Way",
         value = NA,
         width = '100px',
         min = 1,
         max = 10),
-      checkboxInput("Ralph_el_Demoledor_check", "Pintar Ralph el Demoledor", FALSE), class = 'div_contenedor'),
+      checkboxInput("Rebelde_Way_check", "Pintar Rebelde Way", FALSE), class = 'div_contenedor'),
   
       div(numericInput(#6
-        inputId = "Minions", 
-        label = "6- Minions",
+        inputId = "A Dos Metros de Ti", 
+        label = "6- A Dos Metros de Ti",
         value = NA,
         width = '100px',
         min = 1,
         max = 10),
-      checkboxInput("Minions_check", "Pintar Minions", FALSE), class = 'div_contenedor'),
+      checkboxInput("A_Dos_Metros_de_Ti_check", "Pintar A Dos Metros de Ti", FALSE), class = 'div_contenedor'),
   
       div(numericInput(#7
-        inputId = "Coco", 
-        label = "7- Coco",
+        inputId = "The Umbrella Academy", 
+        label = "7- The Umbrella Academy",
         value = NA,
         width = '100px',
         min = 1,
         max = 10),
-      checkboxInput("Coco_check", "Pintar Coco", FALSE), class = 'div_contenedor'),
+      checkboxInput("The_Umbrella_Academy_check", "Pintar The Umbrella Academy", FALSE), class = 'div_contenedor'),
   
       div(numericInput(#8
-        inputId = "Intensamente", 
-        label = "8- Intensamente",
+        inputId = "Anne With an e", 
+        label = "8- Anne With an e",
         value = NA,
         width = '110px',
         min = 1,
         max = 10),
-      checkboxInput("Intensamente_check", "Pintar Intensamente", FALSE), class = 'div_contenedor'),
+      checkboxInput("Anne_With_an_e_check", "Pintar Anne With an e", FALSE), class = 'div_contenedor'),
   
       div(numericInput(#9
-        inputId = "Cars", 
-        label = "9- Cars",
+        inputId = "Estamos Muertos", 
+        label = "9- Estamos Muertos",
         value = NA,
         width = '100px',
         min = 1,
         max = 10),
-      checkboxInput("Cars_check", "Pintar Cars", FALSE), class = 'div_contenedor'),
+      checkboxInput("Estamos_Muertos_check", "Pintar Estamos Muertos", FALSE), class = 'div_contenedor'),
       
       div(numericInput(#10
-        inputId = "Buscando a Nemo", 
-        label = "10- Buscando a Nemo",
+        inputId = "Riverdale", 
+        label = "10- Riverdale",
         value = NA,
         width = '100px',
         min = 1,
         max = 10),
-      checkboxInput("Buscando_a_Nemo_check", "Pintar Buscando a Nemo", FALSE), class = 'div_contenedor'),
+      checkboxInput("Riverdale_check", "Pintar Riverdale", FALSE), class = 'div_contenedor'),
       
       div(numericInput(#11
+        inputId = "Go Vive a tu Manera", 
+        label = "11- Go! Vive a tu Manera",
+        value = NA,
+        width = '100px',
+        min = 1,
+        max = 10),
+      checkboxInput("Go_Vive_a_tu_Manera_check", "Pintar Go! Vive a tu Manera", FALSE), class = 'div_contenedor'),
+  
+      div(numericInput(#12
+        inputId = "Yo Nunca", 
+        label = "12- Yo Nunca",
+        value = NA,
+        width = '100px',
+        min = 1,
+        max = 10),
+      checkboxInput("Yo_Nunca_check", "Pintar Yo Nunca", FALSE), class = 'div_contenedor'),
+      
+      div(numericInput(#13
+        inputId = "Un Amor Tan Hermoso", 
+        label = "13- Un Amor tan Hermoso",
+        value = NA,
+        width = '100px',
+        min = 1,
+        max = 10),
+      checkboxInput("Un_Amor_Tan_Hermoso_check", "Pintar Un Amor tan Hermoso", FALSE), class = 'div_contenedor'),
+      
+      div(numericInput(#14
+        inputId = "El Juego del Calamar", 
+        label = "14- El Juego del Calamar",
+        value = NA,
+        width = '100px',
+        min = 1,
+        max = 10),
+      checkboxInput("El_Juego_del_Calamar_check", "Pintar El Juego del Calamar", FALSE), class = 'div_contenedor'),
+      
+      div(numericInput(#15
+        inputId = "Cielo Grande", 
+        label = "15- Cielo Grande",
+        value = NA,
+        width = '100px',
+        min = 1,
+        max = 10),
+      checkboxInput("Cielo_Grande_check", "Pintar Cielo Grande", FALSE), class = 'div_contenedor'),
+      
+      div(numericInput(#16
+        inputId = "La Casa de Papel", 
+        label = "16- La Casa de Papel",
+        value = NA,
+        width = '100px',
+        min = 1,
+        max = 10),
+      checkboxInput("La_Casa_de_Papel_check", "Pintar La Casa de Papel", FALSE), class = 'div_contenedor'),
+  
+      div(numericInput(#17
         inputId = "Avengers", 
-        label = "11- Avengers",
+        label = "17- Avengers",
         value = NA,
         width = '100px',
         min = 1,
         max = 10),
       checkboxInput("Avengers_check", "Pintar Avengers", FALSE), class = 'div_contenedor'),
-  
-      div(numericInput(#12
-        inputId = "Hotel Transilvania", 
-        label = "12- Hotel Transilvania",
-        value = NA,
-        width = '100px',
-        min = 1,
-        max = 10),
-      checkboxInput("Hotel_Transilvania_check", "Pintar Hotel Transilvania", FALSE), class = 'div_contenedor'),
       
-      div(numericInput(#13
-        inputId = "Frozen", 
-        label = "13- Frozen",
-        value = NA,
-        width = '100px',
-        min = 1,
-        max = 10),
-      checkboxInput("Frozen_check", "Pintar Frozen", FALSE), class = 'div_contenedor'),
-      
-      div(numericInput(#14
-        inputId = "Red", 
-        label = "14- Red",
-        value = NA,
-        width = '100px',
-        min = 1,
-        max = 10),
-      checkboxInput("Red_check", "Pintar Red", FALSE), class = 'div_contenedor'),
-      
-      div(numericInput(#15
-        inputId = "Luca", 
-        label = "15- Luca",
-        value = NA,
-        width = '100px',
-        min = 1,
-        max = 10),
-      checkboxInput("Luca_check", "Pintar Luca", FALSE), class = 'div_contenedor'),
-      
-      div(numericInput(#16
+      div(numericInput(#18
         inputId = "Eternals", 
-        label = "16- Eternals",
+        label = "18- Eternals",
         value = NA,
         width = '100px',
         min = 1,
         max = 10),
       checkboxInput("Eternals_check", "Pintar Eternals", FALSE), class = 'div_contenedor'),
-  
-      div(numericInput(#17
-        inputId = "Los Increibles", 
-        label = "17- Los Increibles",
-        value = NA,
-        width = '100px',
-        min = 1,
-        max = 10),
-      checkboxInput("Los_Increibles_check", "Pintar Los Increibles", FALSE), class = 'div_contenedor'),
-      
-      div(numericInput(#18
-        inputId = "Unidos", 
-        label = "18- Unidos",
-        value = NA,
-        width = '100px',
-        min = 1,
-        max = 10),
-      checkboxInput("Unidos_check", "Pintar Unidos", FALSE), class = 'div_contenedor'),
       
       div(numericInput(#19
-        inputId = "El Rey León", 
-        label = "19- El Rey León",
+        inputId = "The Boys", 
+        label = "19- The Boys",
         value = NA,
         width = '100px',
         min = 1,
         max = 10),
-      checkboxInput("El_Rey_León_check", "Pintar El Rey León", FALSE), class = 'div_contenedor'),
+      checkboxInput("The_Boys_check", "Pintar The Boys", FALSE), class = 'div_contenedor'),
       
       div(numericInput(#20
-        inputId = "Grandes Heroes", 
-        label = "20- Grandes Heroes",
+        inputId = "Wanda Vision", 
+        label = "20- Wanda Vision",
         value = NA,
         width = '100px',
         min = 1,
         max = 10),
-      checkboxInput("Grandes_Heroes_check", "Pintar Grandes Heroes", FALSE), class = 'div_contenedor'),
-      
-      div(numericInput(#21
-        inputId = "Cruella", 
-        label = "21- Cruella",
-        value = NA,
-        width = '100px',
-        min = 1,
-        max = 10),
-      checkboxInput("Cruella_check", "Pintar Cruella", FALSE), class = 'div_contenedor'),
-      
-      div(numericInput(#22
-        inputId = "Spider Man", 
-        label = "22- Spider Man",
-        value = NA,
-        width = '100px',
-        min = 1,
-        max = 10),
-      checkboxInput("Spider_Man_check", "Pintar Spider Man", FALSE), class = 'div_contenedor'),
-      
-      div(numericInput(#23
-        inputId = "Soul", 
-        label = "23- Soul",
-        value = NA,
-        width = '100px',
-        min = 1,
-        max = 10),
-      checkboxInput("Soul_check", "Pintar Soul", FALSE), class = 'div_contenedor'),
+      checkboxInput("Wanda_Vision_check", "Pintar Wanda Vision", FALSE), class = 'div_contenedor'),
+    
   
       div(style='padding:2px', actionButton("submit", "Submit")),
   
@@ -455,6 +432,12 @@ body {
         value = NA,
         width = '60px')),
       div(style='padding:2px',
+        # textInput(
+        #   inputId = "elegir_col_cambiar",
+        #   label = 'Columna',
+        #   value = '',
+        #   width = '100px'
+        # ),
         numericInput(
         inputId = 'elegir_col_cambiar',
         label = 'Columna',

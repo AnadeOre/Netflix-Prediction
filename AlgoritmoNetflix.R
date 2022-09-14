@@ -2,17 +2,16 @@ source('Lambda.R')
 
 
 netflix = function(DatosPelis, datosIniciales) {
+  print(datosIniciales)
+  print(DatosPelis)
   names = colnames(DatosPelis)
   movies = rownames(DatosPelis)
-  datosIniciales = matrix(as.numeric(datosIniciales), ncol = ncol(datosIniciales))
-  DatosPelis = matrix(as.numeric(DatosPelis), ncol = ncol(DatosPelis))
   #Segun datos colocamos las respuestas extremas
   vmin=1
   vmax=10
   #renombramos la matriz con datos faltantes
   X=DatosPelis
   X=X[,1:dim(X)[2]]
-  print(dim(datosIniciales))
   X = as.matrix(X)
   datosIniciales = as.matrix(datosIniciales)
   m = dim(datosIniciales)[2]
@@ -22,7 +21,7 @@ netflix = function(DatosPelis, datosIniciales) {
   #Creamos la matriz proyecci?n(lo uso solo para calcular lambda)
   PX=data.matrix(X)
   PX[is.na(PX)==T]=0
-  
+  X = matrix(as.numeric(X), ncol = ncol(X))
   # LAMBDA=1
   # LAMBDA=norm(PX,"2")/1.5 #Este es el que considera en el paper
   # LAMBDA
